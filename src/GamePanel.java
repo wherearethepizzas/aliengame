@@ -14,6 +14,8 @@ public class GamePanel extends JPanel implements KeyListener {
     public static final int GROUND_Y = 600;
     public static final int HEADROOM = 50;
     public static final int BALL_SIZE = 15;
+    public static final int PLATFROM_WIDTH = 60;
+    public static final int PLATFORM_HEIGHT = 6;
 
     private List<Platform> platforms;
     private Ball ball;
@@ -33,14 +35,14 @@ public class GamePanel extends JPanel implements KeyListener {
     private void initializePlatforms() {
         platforms = new ArrayList<>();
         int numPlatforms = 7; 
-        int platformWidth = 60;
-        int platformHeight = 7;
-        int platformSpacing = (HEIGHT-(HEADROOM*2)-(platformHeight*(numPlatforms-2))) / (numPlatforms - 1);
+        int platformWidth = PLATFROM_WIDTH;
+        int platformHeight = PLATFORM_HEIGHT;
+        int platformSpacing = (HEIGHT-(HEADROOM*2)-(platformHeight*(numPlatforms-1))) / (numPlatforms - 1);
         Random random = new Random();
 
         // Add static platforms at the start and end
-        platforms.add(new Platform((WIDTH/2)- platformWidth/2, GROUND_Y - (2*platformHeight), platformWidth, platformHeight, Color.MAGENTA, true));
-        platforms.add(new Platform((WIDTH/2)- platformWidth/2, HEADROOM + platformHeight, platformWidth, platformHeight, Color.GREEN, true));
+        platforms.add(new Platform((WIDTH/2)- platformWidth/2, GROUND_Y, platformWidth, platformHeight, Color.MAGENTA, true));
+        platforms.add(new Platform((WIDTH/2)- platformWidth/2, HEADROOM, platformWidth, platformHeight, Color.GREEN, true));
 
         // Generate some unique speeds
         Set<Integer> speedsSet = new HashSet<>();
@@ -58,7 +60,8 @@ public class GamePanel extends JPanel implements KeyListener {
         // Add moving platforms
         for (int i = 1; i < numPlatforms - 1; i++) {
             int platformX = (WIDTH/2)- platformWidth/2;
-            int platformY = (platformWidth) + (platformSpacing*i);
+            int platformY = (HEADROOM + (platformHeight*i)) + (platformSpacing*i);
+            System.out.println(platformY);
             Platform p = new Platform(platformX, platformY, platformWidth, platformHeight, Color.BLUE, false);
             boolean b = random.nextBoolean();
             if (b) {
@@ -85,7 +88,7 @@ public class GamePanel extends JPanel implements KeyListener {
                 update();
                 repaint();
                 try {
-                    Thread.sleep(20); // Adjust as needed for the game speed
+                    Thread.sleep(40); // Adjust as needed for the game speed
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -95,11 +98,11 @@ public class GamePanel extends JPanel implements KeyListener {
 
     private void update() {
         // ball.fallG();
-        System.out.println("Working");
+        // System.out.println("Working");
         // Check for collisions with platforms
         for (Platform platform : platforms) {
             if (!platform.isStatic()) {
-                platform.move();
+                // platform.move();
                 // Check for collisions with screen edges
                 if (platform.getXCoord() < 0 || (platform.getXCoord() + platform.getW()) > WIDTH) {
                     platform.setSpeed(-platform.getSpeed()); 
@@ -113,10 +116,13 @@ public class GamePanel extends JPanel implements KeyListener {
         super.paintComponent(g);
         for (Platform platform : platforms) {
             platform.draw(g);
+            g.drawLine(0, platform.getYCoord(), WIDTH, platform.getYCoord());
         }
         ball.draw(g);
         g.setColor(Color.BLACK);
         g.drawString("Score: " + score, 10, 20);
+        g.drawLine(0,600,WIDTH,600);
+        g.drawLine(0,HEADROOM,WIDTH,HEADROOM);
     }
 
     @Override
