@@ -1,23 +1,24 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-public class GamePanel extends JPanel implements KeyListener {
-    private static final int WIDTH = 600;
-    private static final int HEIGHT = 650;
+public class GamePanel extends JPanel implements Runnable {
+    public static final int WIDTH = 600;
+    public static final int HEIGHT = 650;
+    public static final int FPS_SET = 120;
     public static final int GROUND_Y = 600;
     public static final int HEADROOM = 50;
-    public static final int BALL_SIZE = 15;
+    public static final int BALL_SIZE = 14;
     public static final int PLATFROM_WIDTH = 60;
     public static final int PLATFORM_HEIGHT = 6;
+    public static int platformSpacing;
+    private Thread gameThread;
 
-    private List<Platform> platforms;
+    private ArrayList<Platform> platforms;
     private Ball ball;
     private boolean gameRunning = true;
     private int score = 0;
@@ -25,11 +26,35 @@ public class GamePanel extends JPanel implements KeyListener {
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(Color.WHITE);
-        addKeyListener(this);
         setFocusable(true);
         initializePlatforms();
         initializeBall();
+        addKeyListener(ball);
         startGameLoop();
+    }
+
+    private void startGameLoop() {
+        gameThread = new Thread(this);
+        gameThread.start();
+    }
+
+    @Override
+    public void run() {
+        long timePerFrame = FPS_SET * 1000000000;
+        long lastT = System.nanoTime();
+        while (gameRunning) {
+            long currentT = System.nanoTime();
+            if (currentT - lastT > timePerFrame) {
+                update();
+                repaint();
+                try {
+                    Thread.sleep(80);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            lastT = currentT;
+        }
     }
 
     private void initializePlatforms() {
@@ -37,7 +62,7 @@ public class GamePanel extends JPanel implements KeyListener {
         int numPlatforms = 7; 
         int platformWidth = PLATFROM_WIDTH;
         int platformHeight = PLATFORM_HEIGHT;
-        int platformSpacing = (HEIGHT-(HEADROOM*2)-(platformHeight*(numPlatforms-1))) / (numPlatforms - 1);
+        platformSpacing = (HEIGHT-(HEADROOM*2)-(platformHeight*(numPlatforms-1))) / (numPlatforms - 1);
         Random random = new Random();
 
         // Add static platforms at the start and end
@@ -47,7 +72,7 @@ public class GamePanel extends JPanel implements KeyListener {
         // Generate some unique speeds
         Set<Integer> speedsSet = new HashSet<>();
         while (speedsSet.size() < numPlatforms-2) {
-            int r = random.nextInt(7) + 5;
+            int r = random.nextInt(7) + 13;
             speedsSet.add(r);
         }
 
@@ -61,7 +86,6 @@ public class GamePanel extends JPanel implements KeyListener {
         for (int i = 1; i < numPlatforms - 1; i++) {
             int platformX = (WIDTH/2)- platformWidth/2;
             int platformY = (HEADROOM + (platformHeight*i)) + (platformSpacing*i);
-            System.out.println(platformY);
             Platform p = new Platform(platformX, platformY, platformWidth, platformHeight, Color.BLUE, false);
             boolean b = random.nextBoolean();
             if (b) {
@@ -72,33 +96,27 @@ public class GamePanel extends JPanel implements KeyListener {
 
             platforms.add(p);
         }
+
+        // Sort platforms by height in ascending order
+        platforms.sort(new Comparator<Platform>() {
+
+            @Override
+            public int compare(Platform o1, Platform o2) {
+                return (o1.getYCoord() - o2.getYCoord());
+            }
+            
+        });
     }
 
     private void initializeBall() {
         int ballSize = BALL_SIZE;
         double startX = (platforms.get(0).getXCoord() + platforms.get(0).getW() / 2.0);
-        int startY = GROUND_Y - (2*platforms.get(0).getH()) - (ballSize/2);
+        int startY = GROUND_Y - (ballSize/2) - 1;
         ball = new Ball((int)startX, startY, ballSize, Color.RED);
-        System.out.println(ball.onPlatform(platforms.get(0)));
-    }
-
-    private void startGameLoop() {
-        new Thread(() -> {
-            while (gameRunning) {
-                update();
-                repaint();
-                try {
-                    Thread.sleep(40); // Adjust as needed for the game speed
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
+        // System.out.println(ball.onPlatform(platforms.get(0)));
     }
 
     private void update() {
-        // ball.fallG();
-        // System.out.println("Working");
         // Check for collisions with platforms
         for (Platform platform : platforms) {
             if (!platform.isStatic()) {
@@ -109,6 +127,7 @@ public class GamePanel extends JPanel implements KeyListener {
                 }
             }
         }
+        ball.updatePosition(platforms);
     }
 
     @Override
@@ -125,26 +144,6 @@ public class GamePanel extends JPanel implements KeyListener {
         g.drawLine(0,HEADROOM,WIDTH,HEADROOM);
     }
 
-    @Override
-    public void keyPressed(KeyEvent e) {
-        int keyCode = e.getKeyCode();
-        if (keyCode == KeyEvent.VK_UP) {
-            ball.jump();
-        } else if (keyCode == KeyEvent.VK_LEFT) {
-            ball.moveLeft();
-        } else if (keyCode == KeyEvent.VK_RIGHT) {
-            ball.moveRight();
-        }
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-    }
-
-    @Override
-    public void keyTyped(KeyEvent e) {
-    }
-
     public static void main(String[] args) {
         JFrame frame = new JFrame("Jumping Ball Game");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -153,4 +152,5 @@ public class GamePanel extends JPanel implements KeyListener {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
+
 }

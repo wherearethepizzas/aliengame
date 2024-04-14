@@ -6,6 +6,7 @@ public class Platform extends Rectangle{
     private boolean isStatic;
 
     public Platform(int x, int y, int width, int height, Color color, boolean isStatic) {
+        super(x, y, width, height);
         this.x = x;
         this.y = y;
         this.width = width;
