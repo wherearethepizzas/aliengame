@@ -97,7 +97,7 @@ public class GamePanel extends JPanel implements Runnable {
             platforms.add(p);
         }
 
-        // Sort platforms by height in ascending order
+        // Sort platforms by height in ascending order for collision detection
         platforms.sort(new Comparator<Platform>() {
 
             @Override
