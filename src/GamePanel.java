@@ -18,7 +18,7 @@ public class GamePanel extends JPanel implements Runnable {
     public static int platformSpacing;
     private Thread gameThread;
 
-    private ArrayList<Platform> platforms;
+    public static ArrayList<Platform> platforms;
     private Ball ball;
     private boolean gameRunning = true;
     private int score = 0;
@@ -44,11 +44,13 @@ public class GamePanel extends JPanel implements Runnable {
         long lastT = System.nanoTime();
         while (gameRunning) {
             long currentT = System.nanoTime();
+            //This ensures that we can control the frames per second of the game
             if (currentT - lastT > timePerFrame) {
                 update();
                 repaint();
+                //A way to slow the game down (might delete later)
                 try {
-                    Thread.sleep(80);
+                    Thread.sleep(8);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -69,17 +71,21 @@ public class GamePanel extends JPanel implements Runnable {
         platforms.add(new Platform((WIDTH/2)- platformWidth/2, GROUND_Y, platformWidth, platformHeight, Color.MAGENTA, true));
         platforms.add(new Platform((WIDTH/2)- platformWidth/2, HEADROOM, platformWidth, platformHeight, Color.GREEN, true));
 
-        // Generate some unique speeds
-        Set<Integer> speedsSet = new HashSet<>();
-        while (speedsSet.size() < numPlatforms-2) {
-            int r = random.nextInt(7) + 13;
-            speedsSet.add(r);
-        }
-
-        // Add the speeds to an array
+        // Generate some speeds
+        int range = 4;
         ArrayList<Integer> speedsArr = new ArrayList<>();
-        for (int speed : speedsSet) {
-            speedsArr.add(speed);
+
+        int num = random.nextInt(range);
+        speedsArr.add(num);
+
+        //Ensures no contiguous platforms have the same speed
+        for (int i = 1; i < numPlatforms; i++) {
+            do {
+            num = random.nextInt(range) + 1;
+            } while (i > 0 & num == speedsArr.get(i - 1)); 
+            
+            speedsArr.add(num);
+            
         }
 
         // Add moving platforms
@@ -111,7 +117,7 @@ public class GamePanel extends JPanel implements Runnable {
     private void initializeBall() {
         int ballSize = BALL_SIZE;
         double startX = (platforms.get(0).getXCoord() + platforms.get(0).getW() / 2.0);
-        int startY = GROUND_Y - (ballSize/2) - 1;
+        int startY = GROUND_Y - (ballSize/2);
         ball = new Ball((int)startX, startY, ballSize, Color.RED);
         // System.out.println(ball.onPlatform(platforms.get(0)));
     }
@@ -120,11 +126,12 @@ public class GamePanel extends JPanel implements Runnable {
         // Check for collisions with platforms
         for (Platform platform : platforms) {
             if (!platform.isStatic()) {
-                // platform.move();
+                platform.move();
                 // Check for collisions with screen edges
                 if (platform.getXCoord() < 0 || (platform.getXCoord() + platform.getW()) > WIDTH) {
                     platform.setSpeed(-platform.getSpeed()); 
                 }
+                // Check for collision with ball
             }
         }
         ball.updatePosition(platforms);

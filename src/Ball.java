@@ -6,10 +6,12 @@ import java.util.ArrayList;
 public class Ball extends Rectangle implements KeyListener{
     private int x, y, diameter;
     private Color color;
-    private final int SPEED = 3;
-    private boolean moving;
-    private boolean inAir;
+    private final int SPEED = 1;
+    private int airSpeed, speedAfterCollsion;
+    private boolean inAir, left, right, moving, canJump;
     private int deltaX, deltaY;
+    private final int INITIALAIRSPEED = -15;
+    private final double GRAVITATIONAL_C = 1;
 
     public Ball(int x, int y, int diameter, Color color) {
         super(x - diameter / 2, y - diameter / 2, diameter, diameter);
@@ -26,8 +28,9 @@ public class Ball extends Rectangle implements KeyListener{
         g.drawRect(x - diameter / 2, y - diameter / 2, diameter, diameter);
     }
 
-    public void jump() {
-        
+    public void jump(ArrayList<Platform> platforms) {
+        inAir = true;
+        airSpeed = INITIALAIRSPEED;
     }
 
     public int getXCoord() {
@@ -43,28 +46,74 @@ public class Ball extends Rectangle implements KeyListener{
     }
 
     public boolean onPlatform(Platform p) {
-        if ((x-(diameter/2)) >= p.getXCoord() & (x+(diameter/2)) <= (p.getXCoord()+p.getW()) & (y+(diameter/2)) == p.getYCoord() ) {
+        //if the center of the ball is within the platform's x coordinates contact is made
+        if ((x) >= p.getXCoord() & (x) <= (p.getXCoord()+p.getW()) & (y+(diameter/2)) == p.getYCoord() ) {
             return true;
         } else {
             return false;
         }
     }
 
+    public Platform getClosestPlatform(ArrayList<Platform> platforms) {
+        int pointer = ((y + diameter) + GamePanel.HEADROOM) / (GamePanel.platformSpacing) - 1;
+        Platform closestPlatform;
+        //Unelegant way of handling index out of Bounds for closest platform calculation
+        try {
+            closestPlatform = platforms.get(pointer);
+        } catch (Exception IndexOutOfBoundsException) {
+            if (y < 300) {
+                pointer = 0;
+            } else {
+                pointer = 6;
+            }
+            closestPlatform = platforms.get(pointer);
+        }
+        return closestPlatform;
+    }
+
     public void updatePosition(ArrayList<Platform> platforms) {
         moving = false;
-        int pointer = ((y + diameter) + GamePanel.HEADROOM) / (GamePanel.platformSpacing) - 1;
+        Platform platform = getClosestPlatform(platforms);
 
-        if (canMoveHere(x + deltaX, y + deltaY, platforms.get(pointer))) {
-            moving = true;
+        if (this.onPlatform(platform)) {
+            deltaX = platform.getSpeed();
+            System.out.println(deltaX);
             moveX();
-            
-            y += deltaY; 
+        }
+        // if the ball is not moving get out of the method
+        if(!inAir & !left & !right & !canJump) {
+            return;
         }
         
-        deltaX = 0;
-        deltaY = 0;
-        System.out.println(y);
-        System.out.println("pointer: " + pointer);
+        
+        if (!inAir)
+            if(!onPlatform(platform))
+                inAir = true;
+
+        if (inAir) {
+            canJump = false;
+            speedAfterCollsion = 1;
+            if (canMoveHere(x, y + airSpeed, platform)) {
+                y += airSpeed;
+                airSpeed += GRAVITATIONAL_C;
+            } else {
+                //Falling and landed on a platform
+                if (airSpeed > 0 & this.onPlatform(platform)) {
+                    y = platform.getYCoord() - (diameter / 2);
+                    landed();
+                } else {
+                    //Keep falling
+                    airSpeed = speedAfterCollsion;
+                }
+            }
+        }
+
+        if (canMoveHere(x + deltaX, y + deltaY, getClosestPlatform(platforms))) {
+            moveX();
+            y += deltaY; 
+        }
+        moving = true;
+       
     }
     // Collision detection handling
     public boolean canMoveHere(int x, int y, Platform p) {
@@ -79,11 +128,13 @@ public class Ball extends Rectangle implements KeyListener{
     }
 
     public void moveX() {
-        x +=deltaX;
-        if (this.getBounds().x < 0) 
-            x = x + diameter / 2;
-        if (this.getBounds().y + diameter > GamePanel.WIDTH)
-            x = GamePanel.WIDTH - diameter;
+        x += deltaX;
+
+    }
+
+    public void landed() {
+        inAir = false;
+        airSpeed = 0;
     }
 
     @Override
@@ -94,8 +145,9 @@ public class Ball extends Rectangle implements KeyListener{
     @Override
     public void keyPressed(KeyEvent e) {
         int keyCode = e.getKeyCode();
-        if ((keyCode == KeyEvent.VK_UP)) {
-            deltaY -=SPEED;
+        if ((keyCode == KeyEvent.VK_UP) & !inAir & this.onPlatform(getClosestPlatform(GamePanel.platforms))) {
+            canJump = true;
+            jump(GamePanel.platforms);
         }
 
         if (keyCode == KeyEvent.VK_DOWN) {
@@ -103,11 +155,13 @@ public class Ball extends Rectangle implements KeyListener{
         }
 
         if (keyCode == KeyEvent.VK_LEFT) {
-            deltaX -=SPEED;
+            left = true;
+            deltaX = -SPEED;
         }
         
         if (keyCode == KeyEvent.VK_RIGHT) {
-            deltaX +=SPEED;
+            right = true;
+            deltaX = SPEED;
         }
 
 
@@ -115,7 +169,24 @@ public class Ball extends Rectangle implements KeyListener{
 
     @Override
     public void keyReleased(KeyEvent e) {
+        int keyCode = e.getKeyCode();
+        if ((keyCode == KeyEvent.VK_UP)) {
+            canJump = false;
+        }
+
+        if (keyCode == KeyEvent.VK_DOWN) {
+            deltaY = 0;
+        }
+
+        if (keyCode == KeyEvent.VK_LEFT) {
+            left = false;
+            deltaX = 0;
+        }
         
+        if (keyCode == KeyEvent.VK_RIGHT) {
+            right = false;
+            deltaX = 0;
+        }
     }
 
 }
