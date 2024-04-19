@@ -4,6 +4,7 @@ public class Platform extends Rectangle{
     private int x, y, width, height, speed;
     private Color color;
     private boolean isStatic;
+    private boolean visited;
 
     public Platform(int x, int y, int width, int height, Color color, boolean isStatic) {
         super(x, y, width, height);
@@ -53,8 +54,20 @@ public class Platform extends Rectangle{
     }
 
     public void move() {
-        x+=speed;
+        x += speed;
     }
+
+    public void setVisited(boolean b) {
+        visited = b;
+    }
+
+    public boolean getVisited() {
+        return visited;
+    }
+
+    public boolean getIsStatic() {
+        return isStatic;
+    } 
         
 }
 

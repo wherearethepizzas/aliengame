@@ -2,9 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Random;
-import java.util.Set;
 
 public class GamePanel extends JPanel implements Runnable {
     public static final int WIDTH = 600;
@@ -15,11 +13,11 @@ public class GamePanel extends JPanel implements Runnable {
     public static final int BALL_SIZE = 14;
     public static final int PLATFROM_WIDTH = 60;
     public static final int PLATFORM_HEIGHT = 6;
+    public static ArrayList<Platform> platforms;
     public static int platformSpacing;
     private Thread gameThread;
-
-    public static ArrayList<Platform> platforms;
     private Ball ball;
+
     private boolean gameRunning = true;
     private int score = 0;
 
@@ -44,13 +42,13 @@ public class GamePanel extends JPanel implements Runnable {
         long lastT = System.nanoTime();
         while (gameRunning) {
             long currentT = System.nanoTime();
-            //This ensures that we can control the frames per second of the game
+            // This ensures that we can control the frames per second of the game
             if (currentT - lastT > timePerFrame) {
                 update();
                 repaint();
-                //A way to slow the game down (might delete later)
+                // A way to slow the game down (might delete later)
                 try {
-                    Thread.sleep(8);
+                    Thread.sleep(30);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -70,19 +68,20 @@ public class GamePanel extends JPanel implements Runnable {
         // Add static platforms at the start and end
         platforms.add(new Platform((WIDTH/2)- platformWidth/2, GROUND_Y, platformWidth, platformHeight, Color.MAGENTA, true));
         platforms.add(new Platform((WIDTH/2)- platformWidth/2, HEADROOM, platformWidth, platformHeight, Color.GREEN, true));
+        platforms.get(0).setVisited(true);
 
         // Generate some speeds
-        int range = 4;
+        int range = 7;
         ArrayList<Integer> speedsArr = new ArrayList<>();
 
         int num = random.nextInt(range);
         speedsArr.add(num);
 
         //Ensures no contiguous platforms have the same speed
-        for (int i = 1; i < numPlatforms; i++) {
+        for (int i = 1; i < numPlatforms - 1; i++) {
             do {
-            num = random.nextInt(range) + 1;
-            } while (i > 0 & num == speedsArr.get(i - 1)); 
+            num = random.nextInt(range) + 3;
+            } while (Math.abs(num - speedsArr.get(i - 1)) < 2 || num > 7); 
             
             speedsArr.add(num);
             
@@ -103,7 +102,7 @@ public class GamePanel extends JPanel implements Runnable {
             platforms.add(p);
         }
 
-        // Sort platforms by height in ascending order for collision detection
+        // Sort platforms by height in ascending order for collision detection (Highest platform is index 0)
         platforms.sort(new Comparator<Platform>() {
 
             @Override
@@ -117,9 +116,9 @@ public class GamePanel extends JPanel implements Runnable {
     private void initializeBall() {
         int ballSize = BALL_SIZE;
         double startX = (platforms.get(0).getXCoord() + platforms.get(0).getW() / 2.0);
-        int startY = GROUND_Y - (ballSize/2);
+        int startY = GROUND_Y - (ballSize);
         ball = new Ball((int)startX, startY, ballSize, Color.RED);
-        // System.out.println(ball.onPlatform(platforms.get(0)));
+        ball.setInAir(true);
     }
 
     private void update() {
@@ -132,8 +131,23 @@ public class GamePanel extends JPanel implements Runnable {
                     platform.setSpeed(-platform.getSpeed()); 
                 }
                 // Check for collision with ball
+                if (ball.getClosestPlatform(platforms).getBounds().intersects(ball.getBounds())) {
+                    ball.setDeltaX(platform.getSpeed());
+                    ball.moveX();
+                }
+            }
+            if (ball.getClosestPlatform(platforms).getVisited() == false) {
+                if (ball.onPlatform(ball.getClosestPlatform(platforms))) {
+                    ball.getClosestPlatform(platforms).setVisited(true);
+                    score += 10;
+                    // Bonus points for making it to the end
+                    if (ball.getClosestPlatform(platforms).getIsStatic()) {
+                        score += 20;
+                    }
+                }
             }
         }
+
         ball.updatePosition(platforms);
     }
 
