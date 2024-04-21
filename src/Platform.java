@@ -5,6 +5,7 @@ public class Platform extends Rectangle{
     private Color color;
     private boolean isStatic;
     private boolean visited;
+    private boolean lastPlatform;
 
     public Platform(int x, int y, int width, int height, Color color, boolean isStatic) {
         super(x, y, width, height);
@@ -68,6 +69,14 @@ public class Platform extends Rectangle{
     public boolean getIsStatic() {
         return isStatic;
     } 
+
+    public void setLastP(boolean b) {
+        lastPlatform = b;
+    }
+
+    public boolean isLastPlatform() {
+        return lastPlatform;
+    }
         
 }
 

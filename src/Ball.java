@@ -6,7 +6,7 @@ import java.util.ArrayList;
 public class Ball extends Rectangle implements KeyListener{
     private int x, y, diameter;
     private Color color;
-    private final int SPEED = 1;
+    private final int SPEED = 3;
     private int airSpeed, speedAfterCollsion;
     private boolean inAir, left, right, canJump;
     private int deltaX;
@@ -75,16 +75,6 @@ public class Ball extends Rectangle implements KeyListener{
     public void updatePosition(ArrayList<Platform> platforms) {
         
         Platform platform = getClosestPlatform(platforms);
-
-        if (this.onPlatform(platform)) {
-            deltaX = platform.getSpeed();
-            canJump = true;
-        }
-        
-        // if the ball is not moving get out of the method
-        if(!inAir & !this.onPlatform(platform)) {
-            return;
-        }
         
         if (!inAir)
             if(!onPlatform(platform))
@@ -97,6 +87,15 @@ public class Ball extends Rectangle implements KeyListener{
                 y += airSpeed;
                 airSpeed += GRAVITATIONAL_C;
             } else {
+                //On the edge of the platform
+                if (!this.onPlatform(platform) & (y+(diameter/2)) == platform.getYCoord()) {
+                    //On the right edge of platform
+                    if (x >= platform.getMaxX())
+                        deltaX +=1 ;
+                    else
+                        //On the left edge of platform
+                        deltaX -=1;
+                } 
                 //Banged onto the bottom of a platform
                 if (airSpeed < 0) {
                     y = platform.getYCoord() + platform.getH() + (diameter / 2);
@@ -112,9 +111,16 @@ public class Ball extends Rectangle implements KeyListener{
             }
         }
 
+        if (this.onPlatform(platform)) {
+            deltaX += platform.getSpeed();
+            canJump = true;
+        }
+
         if (canMoveHere(x + deltaX, y, getClosestPlatform(platforms))) {
             moveX(); 
-        }
+        } 
+        
+        deltaX = 0;
         
        
     }

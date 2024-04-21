@@ -8,10 +8,11 @@ public class GamePanel extends JPanel implements Runnable {
     public static final int WIDTH = 600;
     public static final int HEIGHT = 650;
     public static final int FPS_SET = 120;
+    public static final int UPS_SET = 30;
     public static final int GROUND_Y = 600;
     public static final int HEADROOM = 50;
     public static final int BALL_SIZE = 14;
-    public static final int PLATFROM_WIDTH = 60;
+    public static final int PLATFROM_WIDTH = 130;
     public static final int PLATFORM_HEIGHT = 6;
     public static ArrayList<Platform> platforms;
     public static int platformSpacing;
@@ -38,22 +39,45 @@ public class GamePanel extends JPanel implements Runnable {
 
     @Override
     public void run() {
-        long timePerFrame = FPS_SET * 1000000000;
-        long lastT = System.nanoTime();
+        long timePerFrame = 1000000000 / FPS_SET;
+        long timerPerUpdate = 1000000000 / UPS_SET;
+        long prevUpdate = System.nanoTime();
+        long prevFrame = System.nanoTime();
+
+        int frames = 0;
+        int updates = 0;
+        long lastCheck = System.currentTimeMillis();
+
+        double deltaU = 0;
+        double deltaF = 0;
+
         while (gameRunning) {
             long currentT = System.nanoTime();
-            // This ensures that we can control the frames per second of the game
-            if (currentT - lastT > timePerFrame) {
+
+            deltaU += (currentT - prevUpdate) / timerPerUpdate;
+            deltaF += (currentT - prevFrame) / timePerFrame;
+
+            
+            if (deltaU >= 1) {
                 update();
-                repaint();
-                // A way to slow the game down (might delete later)
-                try {
-                    Thread.sleep(30);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                updates++;
+                deltaU--;
+                prevUpdate = currentT;
             }
-            lastT = currentT;
+
+            if (deltaF >= 1) {
+                repaint();
+                frames++;
+                deltaF--;
+                prevFrame = currentT;
+            }
+
+            if (System.currentTimeMillis() - lastCheck >= 1000) {
+                lastCheck = System.currentTimeMillis();
+                System.out.println("FPS: " + frames + " | UPS: " + updates);
+                frames = 0;
+                updates = 0;
+            }
         }
     }
 
@@ -65,10 +89,12 @@ public class GamePanel extends JPanel implements Runnable {
         platformSpacing = (HEIGHT-(HEADROOM*2)-(platformHeight*(numPlatforms-1))) / (numPlatforms - 1);
         Random random = new Random();
 
-        // Add static platforms at the start and end
+        // Add platforms at the start and end
         platforms.add(new Platform((WIDTH/2)- platformWidth/2, GROUND_Y, platformWidth, platformHeight, Color.MAGENTA, true));
-        platforms.add(new Platform((WIDTH/2)- platformWidth/2, HEADROOM, platformWidth, platformHeight, Color.GREEN, true));
+        platforms.add(new Platform((WIDTH/2)- platformWidth/2, HEADROOM, platformWidth, platformHeight, Color.GREEN, false));
         platforms.get(0).setVisited(true);
+        platforms.get(1).setLastP(true);
+        platforms.get(1).setSpeed(3);
 
         // Generate some speeds
         int range = 7;
@@ -141,7 +167,7 @@ public class GamePanel extends JPanel implements Runnable {
                     ball.getClosestPlatform(platforms).setVisited(true);
                     score += 10;
                     // Bonus points for making it to the end
-                    if (ball.getClosestPlatform(platforms).getIsStatic()) {
+                    if (ball.getClosestPlatform(platforms).isLastPlatform()) {
                         score += 20;
                     }
                 }
