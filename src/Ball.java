@@ -24,8 +24,6 @@ public class Ball extends Rectangle implements KeyListener{
     public void draw(Graphics g) {
         g.setColor(color);
         g.fillOval(x - diameter / 2, y - diameter / 2, diameter, diameter);
-        g.setColor(Color.magenta);
-        g.drawRect(x - diameter / 2, y - diameter / 2, diameter, diameter);
     }
 
     public void jump(ArrayList<Platform> platforms) {
