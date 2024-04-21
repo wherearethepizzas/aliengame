@@ -162,19 +162,21 @@ public class GamePanel extends JPanel implements Runnable {
                     ball.moveX();
                 }
             }
-            if (ball.getClosestPlatform(platforms).getVisited() == false) {
-                if (ball.onPlatform(ball.getClosestPlatform(platforms))) {
-                    ball.getClosestPlatform(platforms).setVisited(true);
-                    score += 10;
-                    // Bonus points for making it to the end
-                    if (ball.getClosestPlatform(platforms).isLastPlatform()) {
-                        score += 20;
-                    }
+        }
+        
+        ball.updatePosition(platforms);
+        
+        if (ball.getClosestPlatform(platforms).getVisited() == false) {
+            if (ball.onPlatform(ball.getClosestPlatform(platforms))) {
+                ball.getClosestPlatform(platforms).setVisited(true);
+                score += 10;
+                // Bonus points for making it to the end
+                if (ball.getClosestPlatform(platforms).isLastPlatform()) {
+                    score += 20;
                 }
             }
         }
 
-        ball.updatePosition(platforms);
     }
 
     @Override
