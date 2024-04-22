@@ -39,7 +39,6 @@ public class Player extends Rectangle implements KeyListener{
     public void draw(Graphics g) {
         g.setColor(Color.RED);
         g.drawImage(image, x, y + levitationRoom, width, height, null);
-        g.drawRect(x, y, width, height);
     }
 
     public void jump(ArrayList<Platform> platforms) {
@@ -103,7 +102,6 @@ public class Player extends Rectangle implements KeyListener{
                     //On the right edge of platform
                     if ((this.getBounds().getCenterX()) >= platform.getMaxX()) {
                         deltaX += width / 2;
-                        System.out.println("edge");
                     } else
                     //On the left edge of platform
                     if ((this.getBounds().getCenterX()) <= platform.getMinX()) {
@@ -140,7 +138,7 @@ public class Player extends Rectangle implements KeyListener{
         if (nextPlace.x <= 0 || nextPlace.x >= (GamePanel.WIDTH - (this.getBounds().getWidth()))) {
             return false;
         }
-        if (nextPlace.y <= 0 || nextPlace.y + height >= (GamePanel.HEIGHT))
+        if (nextPlace.y <= 0 || nextPlace.y >= (GamePanel.HEIGHT))
             return false;
         return !nextPlace.intersects(p.getBounds());
     }

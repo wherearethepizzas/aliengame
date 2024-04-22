@@ -23,6 +23,7 @@ public class GamePanel extends JPanel implements Runnable {
     private Player player;
     private Image backImage;
     private boolean gameRunning = true;
+    private static boolean win = false;
     private int score = 0;
     
 
@@ -172,6 +173,10 @@ public class GamePanel extends JPanel implements Runnable {
                     player.moveX();
                 }
             }
+            if (win) {
+                platform.setSpeed(0);
+                
+            }
         }
         
         player.updatePosition(platforms);
@@ -183,6 +188,7 @@ public class GamePanel extends JPanel implements Runnable {
                 // Bonus points for making it to the end
                 if (player.getClosestPlatform(platforms).isLastPlatform()) {
                     score += 20;
+                    win = true;
                 }
             }
         }
@@ -199,8 +205,15 @@ public class GamePanel extends JPanel implements Runnable {
         player.draw(g);
         g.setColor(Color.WHITE);
         g.drawString("Score: " + score, 10, 20);
-        // g.drawLine(0,600,WIDTH,600);
-        // g.drawLine(0,HEADROOM,WIDTH,HEADROOM);
+        
+        if (win) {
+            new WinPanel().draw(g);
+            gameRunning = false;
+        } else if (player.getBounds().getY() > GROUND_Y) {
+            new LosePanel().draw(g);
+            gameRunning = false;
+        }
+
     }
 
     public static void main(String[] args) {
