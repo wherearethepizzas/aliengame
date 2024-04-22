@@ -1,5 +1,8 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Random;
@@ -9,27 +12,42 @@ public class GamePanel extends JPanel implements Runnable {
     public static final int HEIGHT = 650;
     public static final int FPS_SET = 120;
     public static final int UPS_SET = 30;
-    public static final int GROUND_Y = 600;
-    public static final int HEADROOM = 50;
+    public static final int GROUND_Y = 630;
+    public static final int HEADROOM = 80;
     public static final int BALL_SIZE = 14;
     public static final int PLATFROM_WIDTH = 130;
     public static final int PLATFORM_HEIGHT = 6;
     public static ArrayList<Platform> platforms;
     public static int platformSpacing;
     private Thread gameThread;
-    private Ball ball;
-
+    private Player player;
+    private Image backImage;
     private boolean gameRunning = true;
     private int score = 0;
+    
 
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(Color.WHITE);
         setFocusable(true);
         initializePlatforms();
-        initializeBall();
-        addKeyListener(ball);
+        initializePlayer();
+        fetchImage();
+        addKeyListener(player);
         startGameLoop();
+    }
+
+    private void initializePlayer() {
+        player = new Player((WIDTH / 2) - (Player.width / 2), GROUND_Y - Player.height);
+        player.setInAir(true);
+    }
+
+    private void fetchImage() {
+        try {
+            backImage = ImageIO.read(new File("lib/space.jpg"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void startGameLoop() {
@@ -86,7 +104,7 @@ public class GamePanel extends JPanel implements Runnable {
         int numPlatforms = 7; 
         int platformWidth = PLATFROM_WIDTH;
         int platformHeight = PLATFORM_HEIGHT;
-        platformSpacing = (HEIGHT-(HEADROOM*2)-(platformHeight*(numPlatforms-1))) / (numPlatforms - 1);
+        platformSpacing = (HEIGHT-(HEADROOM - (HEIGHT - GROUND_Y))-(platformHeight*(numPlatforms-1))) / (numPlatforms - 1);
         Random random = new Random();
 
         // Add platforms at the start and end
@@ -139,14 +157,6 @@ public class GamePanel extends JPanel implements Runnable {
         });
     }
 
-    private void initializeBall() {
-        int ballSize = BALL_SIZE;
-        double startX = (platforms.get(0).getXCoord() + platforms.get(0).getW() / 2.0);
-        int startY = GROUND_Y - (ballSize);
-        ball = new Ball((int)startX, startY, ballSize, Color.RED);
-        ball.setInAir(true);
-    }
-
     private void update() {
         // Check for collisions with platforms
         for (Platform platform : platforms) {
@@ -156,22 +166,22 @@ public class GamePanel extends JPanel implements Runnable {
                 if (platform.getXCoord() < 0 || (platform.getXCoord() + platform.getW()) > WIDTH) {
                     platform.setSpeed(-platform.getSpeed()); 
                 }
-                // Check for collision with ball
-                if (ball.getClosestPlatform(platforms).getBounds().intersects(ball.getBounds())) {
-                    ball.setDeltaX(platform.getSpeed());
-                    ball.moveX();
+                // Check for collision with player
+                if (player.getClosestPlatform(platforms).getBounds().intersects(player.getBounds())) {
+                    player.setDeltaX(platform.getSpeed());
+                    player.moveX();
                 }
             }
         }
         
-        ball.updatePosition(platforms);
+        player.updatePosition(platforms);
         
-        if (ball.getClosestPlatform(platforms).getVisited() == false) {
-            if (ball.onPlatform(ball.getClosestPlatform(platforms))) {
-                ball.getClosestPlatform(platforms).setVisited(true);
+        if (player.getClosestPlatform(platforms).getVisited() == false) {
+            if (player.onPlatform(player.getClosestPlatform(platforms))) {
+                player.getClosestPlatform(platforms).setVisited(true);
                 score += 10;
                 // Bonus points for making it to the end
-                if (ball.getClosestPlatform(platforms).isLastPlatform()) {
+                if (player.getClosestPlatform(platforms).isLastPlatform()) {
                     score += 20;
                 }
             }
@@ -182,15 +192,15 @@ public class GamePanel extends JPanel implements Runnable {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        g.drawImage(backImage, 0, 0, null);
         for (Platform platform : platforms) {
             platform.draw(g);
-            g.drawLine(0, platform.getYCoord(), WIDTH, platform.getYCoord());
         }
-        ball.draw(g);
-        g.setColor(Color.BLACK);
+        player.draw(g);
+        g.setColor(Color.WHITE);
         g.drawString("Score: " + score, 10, 20);
-        g.drawLine(0,600,WIDTH,600);
-        g.drawLine(0,HEADROOM,WIDTH,HEADROOM);
+        // g.drawLine(0,600,WIDTH,600);
+        // g.drawLine(0,HEADROOM,WIDTH,HEADROOM);
     }
 
     public static void main(String[] args) {
@@ -200,6 +210,7 @@ public class GamePanel extends JPanel implements Runnable {
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+        frame.setResizable(false);
     }
 
 }

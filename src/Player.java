@@ -7,9 +7,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import javax.imageio.ImageIO;
 
-public class Ball extends Rectangle implements KeyListener{
-    private int x, y, diameter;
-    private Color color;
+public class Player extends Rectangle implements KeyListener{
+    private int x, y;
     private final int SPEED = 5;
     private int airSpeed, speedAfterCollsion;
     private boolean inAir, left, right, canJump;
@@ -17,13 +16,18 @@ public class Ball extends Rectangle implements KeyListener{
     private final int INITIALAIRSPEED = -14;
     private final double GRAVITATIONAL_C = 1;
     private BufferedImage image;
+    public static int height = 35;
+    public static int width = 25;
+    private static int levitationRoom = 1;
 
-    public Ball(int x, int y, int diameter, Color color) {
-        super(x - diameter / 2, y - diameter / 2, diameter, diameter);
+    public Player(int x, int y) {
+        super(x, y, width, height - levitationRoom);
         this.x = x;
         this.y = y;
-        this.diameter = diameter;
-        this.color = color;
+        fetchImage();
+    }
+
+    private void fetchImage() {
         File file = new File("lib/alien.png");
         try {
             image =  ImageIO.read(file);
@@ -33,9 +37,10 @@ public class Ball extends Rectangle implements KeyListener{
     }
 
     public void draw(Graphics g) {
-        g.setColor(color);
-        // g.fillOval(x - diameter / 2, y - diameter / 2, diameter, diameter);
-        g.drawImage(image, x, y, 25,40, null);
+        g.setColor(Color.MAGENTA);
+        g.drawRect(x,y,width,height - levitationRoom);
+        g.drawImage(image, x, y, width,height + levitationRoom, null);
+        
     }
 
     public void jump(ArrayList<Platform> platforms) {
@@ -43,21 +48,14 @@ public class Ball extends Rectangle implements KeyListener{
         airSpeed = INITIALAIRSPEED;
     }
 
-    public int getXCoord() {
-        return x;
-    }
-
-    public int getYCoord() {
-        return y;
-    }
     // Updates the position of the Bounds
     public Rectangle getBounds() {
-        return new Rectangle(x - diameter / 2, y - diameter / 2, diameter, diameter);
+        return new Rectangle(x, y, width, height - levitationRoom);
     }
 
     public boolean onPlatform(Platform p) {
-        // If the center of the ball is within the platform's x coordinates contact is made
-        if ((x) > p.getBounds().x & (x) < (p.getBounds().getMaxX()) & (y+(diameter/2)) == p.getBounds().y ) {
+        // If the center of the Player is within the platform's x coordinates contact is made
+        if ((this.getBounds().getCenterX()) > p.getBounds().x & (this.getBounds().getCenterX()) < (p.getBounds().getMaxX()) & (this.getBounds().getMaxY()) == p.getBounds().y ) {
             return true;
         } else {
             setInAir(true);
@@ -66,7 +64,8 @@ public class Ball extends Rectangle implements KeyListener{
     }
 
     public Platform getClosestPlatform(ArrayList<Platform> platforms) {
-        int pointer = ((y + diameter) + GamePanel.HEADROOM) / (GamePanel.platformSpacing) - 1;
+        int pointer = ((y + height/2) + GamePanel.HEADROOM) / (GamePanel.platformSpacing) - 1;
+        System.out.println(pointer);
         Platform closestPlatform;
         // Unelegant way of handling index out of Bounds for closest platform calculation
         try {
@@ -105,23 +104,23 @@ public class Ball extends Rectangle implements KeyListener{
                 airSpeed += GRAVITATIONAL_C;
             } else {
                 //On the edge of the platform
-                if (!this.onPlatform(platform) & (y+(diameter/2)) == platform.getBounds().y) {
+                if (!this.onPlatform(platform) & (this.getBounds().getMaxY() == platform.getBounds().y)) {
                     //On the right edge of platform
-                    if (x >= platform.getMaxX()) {
-                        deltaX += diameter / 2;
+                    if ((this.getBounds().getCenterX()) >= platform.getMaxX()) {
+                        deltaX += width / 2;
                     } else
                     //On the left edge of platform
-                    if (x <= platform.getMinX()) {
-                        deltaX -= diameter / 2;
+                    if ((this.getBounds().getCenterX()) <= platform.getMinX()) {
+                        deltaX -= width / 2;
                     }
                 } 
                 //Banged onto the bottom of a platform
                 if (airSpeed < 0) {
-                    y = platform.getYCoord() + platform.getH() + (diameter / 2);
+                    y = platform.getYCoord() + platform.getH() + 1;
                 }
                 //Falling and landed on a platform
                 if (airSpeed > 0 & this.onPlatform(platform)) {
-                    y = platform.getYCoord() - (diameter / 2);
+                    y = platform.getYCoord() - (this.getBounds().height);
                     landed();
                 } else {
                     //Keep falling
@@ -143,11 +142,11 @@ public class Ball extends Rectangle implements KeyListener{
     // Collision detection handling
     public boolean canMoveHere(int x, int y, Platform p) {
         // Creates a virtual hitbox
-        Rectangle nextPlace = new Rectangle(x - this.diameter / 2, y - this.diameter / 2, this.diameter, this.diameter);
+        Rectangle nextPlace = new Rectangle(x, y, width, height - levitationRoom);
         
-        if (x <= ((diameter / 2)) || x >= (GamePanel.WIDTH - (diameter / 2)))
+        if (this.getBounds().x <= 0 || this.getBounds().x >= (GamePanel.WIDTH - (Player.width)))
             return false;
-        if (y <= (diameter / 2) || y >= (GamePanel.HEIGHT - (diameter / 2)))
+        if (this.getBounds().y <= (height) || this.getBounds().y >= (GamePanel.HEIGHT))
             return false;
         return !nextPlace.intersects(p.getBounds());
     }
@@ -215,4 +214,5 @@ public class Ball extends Rectangle implements KeyListener{
     }
 
 }
+
 
