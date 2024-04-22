@@ -9,10 +9,10 @@ import javax.imageio.ImageIO;
 
 public class Player extends Rectangle implements KeyListener{
     private int x, y;
-    private final int SPEED = 5;
     private int airSpeed, speedAfterCollsion;
     private boolean inAir, left, right, canJump;
     private int deltaX;
+    private final int SPEED = 5;
     private final int INITIALAIRSPEED = -14;
     private final double GRAVITATIONAL_C = 1;
     private BufferedImage image;
@@ -21,7 +21,7 @@ public class Player extends Rectangle implements KeyListener{
     private static int levitationRoom = 1;
 
     public Player(int x, int y) {
-        super(x, y, width, height - levitationRoom);
+        super(x, y, width, height);
         this.x = x;
         this.y = y;
         fetchImage();
@@ -37,10 +37,9 @@ public class Player extends Rectangle implements KeyListener{
     }
 
     public void draw(Graphics g) {
-        g.setColor(Color.MAGENTA);
-        g.drawRect(x,y,width,height - levitationRoom);
-        g.drawImage(image, x, y, width,height + levitationRoom, null);
-        
+        g.setColor(Color.RED);
+        g.drawImage(image, x, y + levitationRoom, width, height, null);
+        g.drawRect(x, y, width, height);
     }
 
     public void jump(ArrayList<Platform> platforms) {
@@ -50,7 +49,7 @@ public class Player extends Rectangle implements KeyListener{
 
     // Updates the position of the Bounds
     public Rectangle getBounds() {
-        return new Rectangle(x, y, width, height - levitationRoom);
+        return new Rectangle(x, y, width, height);
     }
 
     public boolean onPlatform(Platform p) {
@@ -64,20 +63,15 @@ public class Player extends Rectangle implements KeyListener{
     }
 
     public Platform getClosestPlatform(ArrayList<Platform> platforms) {
-        int pointer = ((y + height/2) + GamePanel.HEADROOM) / (GamePanel.platformSpacing) - 1;
-        System.out.println(pointer);
-        Platform closestPlatform;
-        // Unelegant way of handling index out of Bounds for closest platform calculation
-        try {
-            closestPlatform = platforms.get(pointer);
-        } catch (Exception IndexOutOfBoundsException) {
-            // Upper part of the screen
-            if (y < 300) {
-                pointer = 0;
-            } else {
-                pointer = 6;
+        Platform closestPlatform = platforms.get(0);
+        for (int i = 0; i < platforms.size(); i++) {
+            double playerCenter = this.getBounds().getCenterY();
+            double platformCenter = platforms.get(i).getCenterY();
+
+            if ((playerCenter > platformCenter - (GamePanel.platformSpacing / 2)) & playerCenter < platformCenter + (GamePanel.platformSpacing / 2)) {
+                closestPlatform = platforms.get(i);
+                return closestPlatform;
             }
-            closestPlatform = platforms.get(pointer);
         }
         return closestPlatform;
     }
@@ -97,6 +91,7 @@ public class Player extends Rectangle implements KeyListener{
         }
 
         if (inAir) {
+            // System.out.println("inair");
             canJump = false;
             speedAfterCollsion = 1;
             if (canMoveHere(x, y + airSpeed, platform)) {
@@ -108,6 +103,7 @@ public class Player extends Rectangle implements KeyListener{
                     //On the right edge of platform
                     if ((this.getBounds().getCenterX()) >= platform.getMaxX()) {
                         deltaX += width / 2;
+                        System.out.println("edge");
                     } else
                     //On the left edge of platform
                     if ((this.getBounds().getCenterX()) <= platform.getMinX()) {
@@ -132,21 +128,19 @@ public class Player extends Rectangle implements KeyListener{
         if ((right || left || canJump) & canMoveHere(x + deltaX, y, getClosestPlatform(platforms))) {
             moveX(); 
         }
-
-        // System.out.println("x: " + x + " | platform: " + platform.getBounds().x + ", " + platform.getBounds().getMaxX());
         
         deltaX = 0;
-        
-       
+   
     }
     // Collision detection handling
     public boolean canMoveHere(int x, int y, Platform p) {
         // Creates a virtual hitbox
-        Rectangle nextPlace = new Rectangle(x, y, width, height - levitationRoom);
+        Rectangle nextPlace = new Rectangle(x, y, width, height);
         
-        if (this.getBounds().x <= 0 || this.getBounds().x >= (GamePanel.WIDTH - (Player.width)))
+        if (nextPlace.x <= 0 || nextPlace.x >= (GamePanel.WIDTH - (this.getBounds().getWidth()))) {
             return false;
-        if (this.getBounds().y <= (height) || this.getBounds().y >= (GamePanel.HEIGHT))
+        }
+        if (nextPlace.y <= 0 || nextPlace.y + height >= (GamePanel.HEIGHT))
             return false;
         return !nextPlace.intersects(p.getBounds());
     }

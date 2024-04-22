@@ -66,19 +66,15 @@ public class Ball extends Rectangle implements KeyListener{
     }
 
     public Platform getClosestPlatform(ArrayList<Platform> platforms) {
-        int pointer = ((y + diameter) + GamePanel.HEADROOM) / (GamePanel.platformSpacing) - 1;
-        Platform closestPlatform;
-        // Unelegant way of handling index out of Bounds for closest platform calculation
-        try {
-            closestPlatform = platforms.get(pointer);
-        } catch (Exception IndexOutOfBoundsException) {
-            // Upper part of the screen
-            if (y < 300) {
-                pointer = 0;
-            } else {
-                pointer = 6;
+        Platform closestPlatform = platforms.get(0);
+        for (int i = 0; i < platforms.size(); i++) {
+            double ballCenter = this.getBounds().getCenterY();
+            double platformCenter = platforms.get(i).getCenterY();
+
+            if ((ballCenter > platformCenter - (GamePanel.platformSpacing / 2)) & ballCenter < platformCenter + (GamePanel.platformSpacing / 2)) {
+                closestPlatform = platforms.get(i);
+                return closestPlatform;
             }
-            closestPlatform = platforms.get(pointer);
         }
         return closestPlatform;
     }

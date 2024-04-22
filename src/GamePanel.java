@@ -12,8 +12,8 @@ public class GamePanel extends JPanel implements Runnable {
     public static final int HEIGHT = 650;
     public static final int FPS_SET = 120;
     public static final int UPS_SET = 30;
-    public static final int GROUND_Y = 630;
-    public static final int HEADROOM = 80;
+    public static final int GROUND_Y = 600;
+    public static final int HEADROOM = 90;
     public static final int BALL_SIZE = 14;
     public static final int PLATFROM_WIDTH = 130;
     public static final int PLATFORM_HEIGHT = 6;
@@ -104,7 +104,7 @@ public class GamePanel extends JPanel implements Runnable {
         int numPlatforms = 7; 
         int platformWidth = PLATFROM_WIDTH;
         int platformHeight = PLATFORM_HEIGHT;
-        platformSpacing = (HEIGHT-(HEADROOM - (HEIGHT - GROUND_Y))-(platformHeight*(numPlatforms-1))) / (numPlatforms - 1);
+        platformSpacing = (GROUND_Y - HEADROOM -(platformHeight*(numPlatforms-1))) / (numPlatforms - 1);
         Random random = new Random();
 
         // Add platforms at the start and end
