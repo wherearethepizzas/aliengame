@@ -113,23 +113,22 @@ public class GamePanel extends JPanel implements Runnable {
         platforms.add(new Platform((WIDTH/2)- platformWidth/2, HEADROOM, platformWidth, platformHeight, Color.GREEN, false));
         platforms.get(0).setVisited(true);
         platforms.get(1).setLastP(true);
-        platforms.get(1).setSpeed(3);
+        platforms.get(1).setSpeed(2);
 
         // Generate some speeds
         int range = 7;
         ArrayList<Integer> speedsArr = new ArrayList<>();
-
-        int num = random.nextInt(range);
-        speedsArr.add(num);
+        int num, prevNum;
+        num = 0; // initial value
 
         //Ensures no contiguous platforms have the same speed
-        for (int i = 1; i < numPlatforms - 1; i++) {
+        for (int i = 0; i < numPlatforms - 2; i++) {
+            prevNum = num;
             do {
-            num = random.nextInt(range) + 3;
-            } while (Math.abs(num - speedsArr.get(i - 1)) < 2 || num > 7); 
-            
+                num = random.nextInt(range) + 3;
+            } while ((Math.abs(num - prevNum)) < 2 || num > 7); 
+
             speedsArr.add(num);
-            
         }
 
         // Add moving platforms
@@ -146,7 +145,7 @@ public class GamePanel extends JPanel implements Runnable {
 
             platforms.add(p);
         }
-
+       
         // Sort platforms by height in ascending order for collision detection (Highest platform is index 0)
         platforms.sort(new Comparator<Platform>() {
 
