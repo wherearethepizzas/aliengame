@@ -6,12 +6,16 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import javax.imageio.ImageIO;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 
 public class Player extends Rectangle implements KeyListener{
     private int x, y;
     private int airSpeed, speedAfterCollsion;
     private boolean inAir, left, right, canJump;
     private int deltaX;
+    private Clip clip;
     private final int SPEED = 5;
     private final int INITIALAIRSPEED = -14;
     private final double GRAVITATIONAL_C = 1;
@@ -36,6 +40,17 @@ public class Player extends Rectangle implements KeyListener{
         }
     }
 
+    private void fetchAudio() {
+        File file = new File("lib/boing.wav");
+        try {
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(file);
+            clip = AudioSystem.getClip();
+            clip.open(audioStream);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void draw(Graphics g) {
         g.setColor(Color.RED);
         g.drawImage(image, x, y + levitationRoom, width, height, null);
@@ -44,6 +59,8 @@ public class Player extends Rectangle implements KeyListener{
     public void jump(ArrayList<Platform> platforms) {
         inAir = true;
         airSpeed = INITIALAIRSPEED;
+        fetchAudio();
+        clip.start();
     }
 
     // Updates the position of the Bounds

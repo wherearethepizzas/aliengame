@@ -1,4 +1,7 @@
 import javax.imageio.ImageIO;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
@@ -22,9 +25,11 @@ public class GamePanel extends JPanel implements Runnable {
     private Thread gameThread;
     private Player player;
     private Image backImage;
+    private Clip bgClip, hitClip, landClip, winClip, loseClip;
+    private File file;
     private boolean gameRunning = true;
-    private static boolean win = false;
-    private int score = 0;
+    private boolean win = false;
+    public static int score = 0;
     
 
     public GamePanel() {
@@ -51,6 +56,38 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
+    private Clip fetchAudio(Clip clip, String s) {
+
+        switch (s) {
+            case "b":
+                file = new File("lib/bg_music.wav");
+                break;
+            case "w":
+                file = new File("lib/win.wav");
+                break;
+            case "d":
+                file = new File("lib/game_over.wav");
+                break;
+            case "l":
+                file = new File("lib/land.wav");
+                break;
+            case "h":
+                file = new File("lib/hit.wav");
+                break;
+            default:
+                break;
+        }
+    
+        try {
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(file);
+            clip = AudioSystem.getClip();
+            clip.open(audioStream);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return clip;
+    }
+
     private void startGameLoop() {
         gameThread = new Thread(this);
         gameThread.start();
@@ -58,19 +95,25 @@ public class GamePanel extends JPanel implements Runnable {
 
     @Override
     public void run() {
+        bgClip = fetchAudio(bgClip, "b");
+        bgClip.setMicrosecondPosition(1000);   
+        
         long timePerFrame = 1000000000 / FPS_SET;
         long timerPerUpdate = 1000000000 / UPS_SET;
         long prevUpdate = System.nanoTime();
         long prevFrame = System.nanoTime();
-
+        
         int frames = 0;
         int updates = 0;
         long lastCheck = System.currentTimeMillis();
-
+        
         double deltaU = 0;
         double deltaF = 0;
-
+        
+        bgClip.start();
+        
         while (gameRunning) {
+            bgClip.loop(Clip.LOOP_CONTINUOUSLY);
             long currentT = System.nanoTime();
 
             deltaU += (currentT - prevUpdate) / timerPerUpdate;
@@ -169,12 +212,14 @@ public class GamePanel extends JPanel implements Runnable {
                 // Check for collision with player
                 if (player.getClosestPlatform(platforms).getBounds().intersects(player.getBounds())) {
                     player.setDeltaX(platform.getSpeed());
+                    hitClip = fetchAudio(hitClip, "h");
+                    hitClip.setMicrosecondPosition(900);
+                    hitClip.start();
                     player.moveX();
                 }
             }
             if (win) {
                 platform.setSpeed(0);
-                
             }
         }
         
@@ -184,9 +229,13 @@ public class GamePanel extends JPanel implements Runnable {
             if (player.onPlatform(player.getClosestPlatform(platforms))) {
                 player.getClosestPlatform(platforms).setVisited(true);
                 score += 10;
+                landClip = fetchAudio(landClip, "l");
+                landClip.start();
                 // Bonus points for making it to the end
                 if (player.getClosestPlatform(platforms).isLastPlatform()) {
                     score += 20;
+                    winClip = fetchAudio(winClip, "w");
+                    winClip.start();
                     win = true;
                 }
             }
@@ -208,9 +257,13 @@ public class GamePanel extends JPanel implements Runnable {
         if (win) {
             new WinPanel().draw(g);
             gameRunning = false;
+            bgClip.stop();
         } else if (player.getBounds().getY() > GROUND_Y) {
             new LosePanel().draw(g);
             gameRunning = false;
+            bgClip.stop();
+            loseClip = fetchAudio(loseClip, "d");
+            loseClip.start();
         }
 
     }

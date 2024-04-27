@@ -1,3 +1,5 @@
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -24,5 +26,8 @@ public class WinPanel {
 
     public void draw(Graphics g) {
         g.drawImage(image, 100, 200, 400, 200,null);
+        g.setColor(new Color(0xF020D8));
+        g.setFont(new Font("Agency FB", Font.BOLD, 20));
+        g.drawString("Score: " + GamePanel.score, 272, 390);
     }
 }
