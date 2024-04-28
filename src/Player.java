@@ -107,7 +107,7 @@ public class Player extends Rectangle implements KeyListener{
         }
 
         if (inAir) {
-            // System.out.println("inair");
+
             canJump = false;
             speedAfterCollsion = 1;
             if (canMoveHere(x, y + airSpeed, platform)) {

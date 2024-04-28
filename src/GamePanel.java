@@ -95,10 +95,10 @@ public class GamePanel extends JPanel implements Runnable {
     @Override
     public void run() {
         bgClip = fetchAudio(bgClip, "b");
-        bgClip.setMicrosecondPosition(1000);   
+        bgClip.setMicrosecondPosition(2000);   
         
         long timePerFrame = 1000000000 / FPS_SET;
-        long timerPerUpdate = 1000000000 / UPS_SET;
+        long timePerUpdate = 1000000000 / UPS_SET;
         long prevUpdate = System.nanoTime();
         long prevFrame = System.nanoTime();
         
@@ -115,7 +115,7 @@ public class GamePanel extends JPanel implements Runnable {
             bgClip.loop(Clip.LOOP_CONTINUOUSLY);
             long currentT = System.nanoTime();
 
-            deltaU += (currentT - prevUpdate) / timerPerUpdate;
+            deltaU += (currentT - prevUpdate) / timePerUpdate;
             deltaF += (currentT - prevFrame) / timePerFrame;
 
             
@@ -212,8 +212,10 @@ public class GamePanel extends JPanel implements Runnable {
                 if (player.getClosestPlatform(platforms).getBounds().intersects(player.getBounds())) {
                     player.setDeltaX(platform.getSpeed());
                     hitClip = fetchAudio(hitClip, "h");
-                    hitClip.setMicrosecondPosition(900);
+                    hitClip.setMicrosecondPosition(1000);
                     hitClip.start();
+                    if (score > 5)
+                        score-=5;
                     player.moveX();
                 }
             }
@@ -268,7 +270,7 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public static void main(String[] args) {
-        JFrame frame = new JFrame("Jumping Ball Game");
+        JFrame frame = new JFrame("Space Dude");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().add(new GamePanel());
         frame.pack();
