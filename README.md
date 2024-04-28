@@ -77,6 +77,11 @@ update loops through every platform in the platforms arraylist and updates its p
 
 paintComponent renders all the graphics in the game.
 
+### WinPanel
+A simple JComponent to output a message that signals the successful completion of the game as well as the score.
+
+### LosePanel
+A simple JComponent to output a message that signals failure to complete the game objective as well as the score.
 
 ## Proud moments
 * Making comments: you'll find that our code is well documented
