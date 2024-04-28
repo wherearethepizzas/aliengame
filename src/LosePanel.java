@@ -7,8 +7,7 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-public class LosePanel {
-    
+public class LosePanel{
     private BufferedImage image;
 
     public LosePanel() {
@@ -25,9 +24,9 @@ public class LosePanel {
     }
 
     public void draw(Graphics g) {
-        g.drawImage(image, 100, 200, 400, 200,null);
-        g.setColor(new Color(0xB95CF4));
-        g.setFont(new Font("Agency FB", Font.PLAIN, 20));
+        g.drawImage(image, 150, 200, 300, 200,null);
+        g.setColor(new Color(0xF02070));
+        g.setFont(new Font("Agency FB", Font.BOLD, 20));
         g.drawString("Score: " + GamePanel.score, 272, 390);
     }
 }

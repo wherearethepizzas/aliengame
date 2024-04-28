@@ -34,7 +34,6 @@ public class GamePanel extends JPanel implements Runnable {
 
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
-        setBackground(Color.WHITE);
         setFocusable(true);
         initializePlatforms();
         initializePlayer();
@@ -265,7 +264,7 @@ public class GamePanel extends JPanel implements Runnable {
             loseClip = fetchAudio(loseClip, "d");
             loseClip.start();
         }
-
+        
     }
 
     public static void main(String[] args) {
